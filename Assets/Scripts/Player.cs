@@ -17,10 +17,12 @@ public class Player : MonoBehaviour
     private bool _thrusting;
     private float _turnDirection;
     private Rigidbody2D _rigidbody;
+    private SpriteRenderer _spriteRenderer;
 
     private void Awake()
     {
         _rigidbody = GetComponent<Rigidbody2D>();
+        _spriteRenderer = GetComponent<SpriteRenderer>();
     }
     private void Update()
     {
@@ -30,11 +32,11 @@ public class Player : MonoBehaviour
         {
             if (_thrusting)
             {
-                GetComponent<SpriteRenderer>().sprite = thrustRotateLeft;
+                _spriteRenderer.sprite = thrustRotateLeft;
             }
             else
             {
-                GetComponent<SpriteRenderer>().sprite = rotateLeft;
+                _spriteRenderer.sprite = rotateLeft;
             }
             _turnDirection = 1.0f;
         }
@@ -42,11 +44,11 @@ public class Player : MonoBehaviour
         {
             if (_thrusting)
             {
-                GetComponent<SpriteRenderer>().sprite = thrustRotateRight;
+                _spriteRenderer.sprite = thrustRotateRight;
             }
             else
             {
-                GetComponent<SpriteRenderer>().sprite = rotateRight;
+                _spriteRenderer.sprite = rotateRight;
             }
             _turnDirection = -1.0f;
         }
@@ -66,12 +68,12 @@ public class Player : MonoBehaviour
         // We can only thrust upwards
         if (_thrusting)
         {
-            GetComponent<SpriteRenderer>().sprite = thrust;
+            _spriteRenderer.sprite = thrust;
             _rigidbody.AddForce(this.transform.up * thrustspeed);
         }
         if (_thrusting == false && _turnDirection == 0.0f)
         {
-            GetComponent<SpriteRenderer>().sprite = rest;
+            _spriteRenderer.sprite = rest;
         }
         if (_turnDirection != 0.0f)
         {
@@ -82,5 +84,20 @@ public class Player : MonoBehaviour
     {
         Bullet bullet = Instantiate(this.bulletPrefab, this.transform.position, this.transform.rotation);
         bullet.Project(this.transform.up);
+    }
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Asteroid"))
+        {
+            _rigidbody.velocity = Vector2.zero;
+            _rigidbody.angularVelocity = 0.0f;
+
+            gameObject.SetActive(false);
+
+            // This is an expensive function to use and it is not good practice
+            // TODO: let the game manager know the player has died in a better way
+
+            FindObjectOfType<GameManager>().PlayerDied();
+        }
     }
 }
